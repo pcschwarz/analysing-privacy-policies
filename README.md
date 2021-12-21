@@ -1,7 +1,7 @@
 # How to access the dashboard on the web
 
 Just open the following URL (it might take a while the first time you run it, as the dashboard gets redeployed after its not been used for over an hour)
-https://vagueness-and-readability.herokuapp.com/
+https://analyzing-privacy-policies.herokuapp.com/
 
 # How to run the services on your own
 
