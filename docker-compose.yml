@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  dashboard-service:
+    build: ./
+    volumes:
+      - ./data:/usr/src/data
+    ports:
+      - 8051:8050
+
