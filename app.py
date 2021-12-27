@@ -192,6 +192,12 @@ app.layout = html.Div([
             id='posthoc-output',
             columns=[{"name": i, "id": i} for i in precalculated_posthoc_result.columns],
             data=precalculated_posthoc_result_dict,
+            tooltip_data=[
+                {
+                    column_id: {'value': str(next(iter(row.values()))) + " vs " + str(column_id), 'type': 'markdown'}
+                    for column_id, row_id in row.items()
+                } for row in precalculated_posthoc_result_dict
+            ],
             style_data_conditional=(
                     [
                         {
@@ -228,6 +234,7 @@ app.layout = html.Div([
                     ]
 
             )
+
 
         ), style={'width': '100%', 'display': 'inline-block'}),
     ], className="six columns"),

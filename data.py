@@ -1,11 +1,11 @@
 import pandas as pd
 
-
 def get_data(selected_genres, selected_countries, selected_range):
     """
     Returns the data that is contained in the final_dataframe.json file.
     :return: DataFrame that contains the data.
     """
+
     df = pd.read_json("data/final_dataframe.json")
     # only selected genres get returned
     df = df[df['genre'].isin(selected_genres)]
