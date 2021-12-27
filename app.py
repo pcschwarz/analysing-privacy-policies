@@ -305,15 +305,23 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
     cols = posthoc_result.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     posthoc_result = posthoc_result[cols]
-    columns = [{"name": i, "id": i} for i in posthoc_result.columns]
+    columns_result = [{"name": i, "id": i} for i in posthoc_result.columns]
     posthoc_result_dict = posthoc_result.to_dict('records')
     tooltip_data = [
                 {
-                    column_id: {'value': str(next(iter(row.values()))) + " vs " + str(column_id), 'type': 'markdown'}
+                    column_id: {'value': str(next(iter(row.values()))) #left country
+                                         + " with mean rank: "
+                                         + str(data.get_mean_rank(y_value, x_value, str(next(iter(row.values())))))
+                                         + " vs "
+                                         + str(column_id) # upper contry
+                                         + " with mean rank: "
+                                         + str(data.get_mean_rank(y_value, x_value, str(column_id)))
+                                         ,
+                                'type': 'markdown'}
                     for column_id, row_id in row.items()
                 } for row in posthoc_result_dict
             ]
-    return posthoc_result_dict, columns, tooltip_data
+    return posthoc_result_dict, columns_result, tooltip_data
 
 
 @app.callback(

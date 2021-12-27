@@ -49,6 +49,11 @@ def get_ranked_dataframe(grouping_var, ranking_var):
     group_series = df[grouping_var]
     rank_series = df[ranking_var].rank(ascending=True)
     ranked_dataframe = group_series.to_frame().join(rank_series)
-    ranked_dataframe = ranked_dataframe.groupby(grouping_var)
     ranked_dataframe = ranked_dataframe.groupby([grouping_var]).mean()
     return ranked_dataframe
+
+def get_mean_rank(grouping_var, ranking_var, grouping_var_value):
+    if grouping_var_value == "Country":
+        return None
+    ranked_dataframe = get_ranked_dataframe(grouping_var, ranking_var)
+    return ranked_dataframe.at[grouping_var_value, ranking_var]
