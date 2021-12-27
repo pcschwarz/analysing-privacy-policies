@@ -282,6 +282,7 @@ def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_valu
 @app.callback(
     dash.dependencies.Output('posthoc-output', 'data'),
     dash.dependencies.Output('posthoc-output', 'columns'),
+    dash.dependencies.Output('posthoc-output', 'tooltip_data'),
     [dash.dependencies.Input('genre-checklist-group', 'value'),
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
@@ -305,7 +306,14 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
     cols = cols[-1:] + cols[:-1]
     posthoc_result = posthoc_result[cols]
     columns = [{"name": i, "id": i} for i in posthoc_result.columns]
-    return posthoc_result.to_dict('records'), columns
+    posthoc_result_dict = posthoc_result.to_dict('records')
+    tooltip_data = [
+                {
+                    column_id: {'value': str(next(iter(row.values()))) + " vs " + str(column_id), 'type': 'markdown'}
+                    for column_id, row_id in row.items()
+                } for row in posthoc_result_dict
+            ]
+    return posthoc_result_dict, columns, tooltip_data
 
 
 @app.callback(

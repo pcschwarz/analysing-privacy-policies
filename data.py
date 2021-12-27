@@ -43,3 +43,12 @@ def get_available_countries_label_value_pairs():
     for country in available_countries:
         result.append({'label': country, 'value': country})
     return result
+
+def get_ranked_dataframe(grouping_var, ranking_var):
+    df = pd.read_json("data/final_dataframe.json")
+    group_series = df[grouping_var]
+    rank_series = df[ranking_var].rank(ascending=True)
+    ranked_dataframe = group_series.to_frame().join(rank_series)
+    ranked_dataframe = ranked_dataframe.groupby(grouping_var)
+    ranked_dataframe = ranked_dataframe.groupby([grouping_var]).mean()
+    return ranked_dataframe
