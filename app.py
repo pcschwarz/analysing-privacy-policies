@@ -192,12 +192,30 @@ app.layout = html.Div([
             id='posthoc-output',
             columns=[{"name": i, "id": i} for i in precalculated_posthoc_result.columns],
             data=precalculated_posthoc_result_dict,
+            tooltip_delay=0,
+            tooltip_duration=None,
             tooltip_data=[
                 {
                     column_id: {'value': str(next(iter(row.values()))) + " vs " + str(column_id), 'type': 'markdown'}
                     for column_id, row_id in row.items()
                 } for row in precalculated_posthoc_result_dict
             ],
+            # tooltip_data=[
+            #     {
+            #         column_id: {'value': str(next(iter(row.values())))  # left country
+            #                              + " with mean rank: "
+            #                              + str(
+            #             data.get_mean_rank('hostingLocation', 'vagueTotalPercentage', str(next(iter(row.values())))))
+            #                              + " vs "
+            #                              + str(column_id)  # upper contry
+            #                              + " with mean rank: "
+            #                              + str(
+            #             data.get_mean_rank('hostingLocation', 'vagueTotalPercentage', str(column_id)))
+            #             ,
+            #                     'type': 'markdown'}
+            #         for column_id, row_id in row.items()
+            #     } for row in precalculated_posthoc_result_dict
+            # ],
             style_data_conditional=(
                     [
                         {

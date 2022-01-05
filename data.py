@@ -56,4 +56,4 @@ def get_mean_rank(grouping_var, ranking_var, grouping_var_value):
     if grouping_var_value == "Country":
         return None
     ranked_dataframe = get_ranked_dataframe(grouping_var, ranking_var)
-    return ranked_dataframe.at[grouping_var_value, ranking_var]
+    return ranked_dataframe.at[grouping_var_value, ranking_var].round(1)
