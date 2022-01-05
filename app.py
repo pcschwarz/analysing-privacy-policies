@@ -190,7 +190,6 @@ app.layout = html.Div([
 
         html.H5(id='post-hoc-header',
                 children='Kruskal Wallis Post-Hoc Dunn Test using bonferroni for adjusting p values'),
-        html.Button('Update Tooltips', id='update-tooltips', n_clicks=0),
 
         html.Div(dash_table.DataTable(
             id='posthoc-output',
@@ -198,37 +197,6 @@ app.layout = html.Div([
             data=posthoc_result_dict,
             tooltip_delay=0,
             tooltip_duration=None,
-            #Option1
-            tooltip_data=[
-                {
-                    column_id: {'value': 'Please click on the update Tooltip Button and hover again', 'type': 'markdown'}
-                    for column_id, row_id in row.items()
-                } for row in posthoc_result_dict
-            ],
-            #Option2
-            # tooltip_data=[
-            #     {
-            #         column_id: {'value': str(next(iter(row.values()))) + " vs " + str(column_id), 'type': 'markdown'}
-            #         for column_id, row_id in row.items()
-            #     } for row in precalculated_posthoc_result_dict
-            # ],
-            #Option3
-            # tooltip_data=[
-            #     {
-            #         column_id: {'value': str(next(iter(row.values())))  # left country
-            #                              + " with mean rank: "
-            #                              + str(
-            #             data.get_mean_rank('hostingLocation', 'vagueTotalPercentage', str(next(iter(row.values())))))
-            #                              + " vs "
-            #                              + str(column_id)  # upper contry
-            #                              + " with mean rank: "
-            #                              + str(
-            #             data.get_mean_rank('hostingLocation', 'vagueTotalPercentage', str(column_id)))
-            #             ,
-            #                     'type': 'markdown'}
-            #         for column_id, row_id in row.items()
-            #     } for row in precalculated_posthoc_result_dict
-            # ],
             style_data_conditional=(
                     [
                         {
@@ -316,7 +284,7 @@ def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_valu
 @app.callback(
     dash.dependencies.Output('posthoc-output', 'data'),
     dash.dependencies.Output('posthoc-output', 'columns'),
-    #dash.dependencies.Output('posthoc-output', 'tooltip_data'),
+    dash.dependencies.Output('posthoc-output', 'tooltip_data'),
     [dash.dependencies.Input('genre-checklist-group', 'value'),
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
@@ -346,30 +314,6 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
     posthoc_result = posthoc_result[cols]
     columns_result = [{"name": i, "id": i} for i in posthoc_result.columns]
     posthoc_result_dict = posthoc_result.to_dict('records')
-    # tooltip_data = [
-    #             {
-    #                 column_id: {'value': str(next(iter(row.values()))) #left country
-    #                                      + " with mean rank: "
-    #                                      + str(data.get_mean_rank(y_value, x_value, str(next(iter(row.values())))))
-    #                                      + " vs "
-    #                                      + str(column_id) # upper contry
-    #                                      + " with mean rank: "
-    #                                      + str(data.get_mean_rank(y_value, x_value, str(column_id)))
-    #                                      ,
-    #                             'type': 'markdown'}
-    #                 for column_id, row_id in row.items()
-    #             } for row in posthoc_result_dict
-    #         ]
-    return posthoc_result_dict, columns_result #, tooltip_data
-
-@app.callback(
-    dash.dependencies.Output('posthoc-output', 'tooltip_data'),
-    [
-     dash.dependencies.Input('update-tooltips', 'n_clicks'),
-     dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
-     dash.dependencies.Input('statistical-2-value-dropdown', 'value'),
-     ])
-def update_tooltip(n_clicks,x_value, y_value):
     ranked_dataframe = data.get_ranked_dataframe(y_value, x_value)
     tooltip_data = [
                 {
@@ -385,8 +329,7 @@ def update_tooltip(n_clicks,x_value, y_value):
                     for column_id, row_id in row.items()
                 } for row in posthoc_result_dict
             ]
-    return tooltip_data
-
+    return posthoc_result_dict, columns_result, tooltip_data
 
 
 @app.callback(
@@ -396,8 +339,6 @@ def update_tooltip(n_clicks,x_value, y_value):
 )
 def set_posthoc_header(posthoctype, adjustment):
     return 'Kruskal Wallis Post-Hoc ' + posthoctype.title() + '-Test using ' + adjustment.title() + ' for adjusting p values'
-
-
 
 
 # Run the application.
