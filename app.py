@@ -370,15 +370,16 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
      dash.dependencies.Input('statistical-2-value-dropdown', 'value'),
      ])
 def update_tooltip(n_clicks,x_value, y_value):
+    ranked_dataframe = data.get_ranked_dataframe(y_value, x_value)
     tooltip_data = [
                 {
                     column_id: {'value': str(next(iter(row.values()))) #left country
                                          + " with mean rank: "
-                                         + str(data.get_mean_rank(y_value, x_value, str(next(iter(row.values())))))
+                                         + str(data.get_mean_rank(ranked_dataframe, x_value, str(next(iter(row.values())))))
                                          + " vs "
                                          + str(column_id) # upper contry
                                          + " with mean rank: "
-                                         + str(data.get_mean_rank(y_value, x_value, str(column_id)))
+                                         + str(data.get_mean_rank(ranked_dataframe, x_value, str(column_id)))
                                          ,
                                 'type': 'markdown'}
                     for column_id, row_id in row.items()
