@@ -364,15 +364,12 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
 
 @app.callback(
     dash.dependencies.Output('posthoc-output', 'tooltip_data'),
-    [dash.dependencies.Input('genre-checklist-group', 'value'),
-     dash.dependencies.Input('selected_countries', 'value'),
-     dash.dependencies.Input('selected_range', 'value'),
+    [
+     dash.dependencies.Input('update-tooltips', 'n_clicks'),
      dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
      dash.dependencies.Input('statistical-2-value-dropdown', 'value'),
-     dash.dependencies.Input('posthoc-type-dropdown', 'value'),
-     dash.dependencies.Input('statistical-adjustment-dropdown', 'value'),
      ])
-def update_tooltip(genre, selected_countries, selected_range, x_value, y_value, posthoctype, adjustment):
+def update_tooltip(n_clicks,x_value, y_value):
     tooltip_data = [
                 {
                     column_id: {'value': str(next(iter(row.values()))) #left country
