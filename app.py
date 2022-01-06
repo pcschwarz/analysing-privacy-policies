@@ -94,6 +94,13 @@ app.layout = html.Div([
             children='Boxplots',
         ),
 
+        # html.Div(dcc.Checklist(
+        #     id='checkbox-dropdown-binder',
+        #     options=[{'label': 'Bind left and right dropdowns', 'value': 'bound'}],
+        #
+        #     labelStyle={'display': 'inline-block'}
+        # ), style={'width': '100%', 'display': 'inline-block'}),
+
         html.Div(dcc.Dropdown(
             id='box-y-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
@@ -129,6 +136,8 @@ app.layout = html.Div([
                                   "vagueTotalPercentage": "percentage occurrence of vague terms"},
                           ),
         ), style={'width': '100%', 'display': 'inline-block'}),
+
+
     ], className="five columns"),
 
     # right column
@@ -137,6 +146,8 @@ app.layout = html.Div([
         html.H4(
             children='Statistical Tests',
         ),
+
+        #html.Br(), #Break if Binder is included
 
         html.Div(dcc.Dropdown(
             id='statistical-1-value-dropdown',
@@ -250,9 +261,9 @@ app.layout = html.Div([
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('box-x-value-dropdown', 'value'),
      dash.dependencies.Input('box-y-value-dropdown', 'value')])
-def update_box_chart(genre, selected_countries, selected_range, x_value, y_value):
-    return px.box(data.get_data(genre, selected_countries, selected_range), x=x_value, y=y_value,
-                  points="outliers", notched=False, color=x_value,
+def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value):
+    return px.box(data.get_data(genre, selected_countries, selected_range), x=boxplot_x_value, y=boxplot_y_value,
+                  points="outliers", notched=False, color=boxplot_x_value,
                   )
 
 
@@ -262,9 +273,9 @@ def update_box_chart(genre, selected_countries, selected_range, x_value, y_value
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('statistical-1-value-dropdown', 'value')])
-def calculate_shapiro(genre, selected_countries, selected_range, x_value):
+def calculate_shapiro(genre, selected_countries, selected_range, statistical_1_value):
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    return str(ss.shapiro(helper_df[x_value]))
+    return str(ss.shapiro(helper_df[statistical_1_value]))
 
 
 @app.callback(
@@ -274,9 +285,9 @@ def calculate_shapiro(genre, selected_countries, selected_range, x_value):
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
      dash.dependencies.Input('statistical-2-value-dropdown', 'value')])
-def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_value):
+def calculate_kruskal(genre, selected_countries, selected_range, statistical_1_value, statistical_2_value):
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    kruskal_data = [helper_df.loc[ids, x_value].values for ids in helper_df.groupby(y_value).groups.values()]
+    kruskal_data = [helper_df.loc[ids, statistical_1_value].values for ids in helper_df.groupby(statistical_2_value).groups.values()]
     return str(ss.kruskal(*kruskal_data))
 
 
@@ -292,20 +303,20 @@ def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_valu
      dash.dependencies.Input('posthoc-type-dropdown', 'value'),
      dash.dependencies.Input('statistical-adjustment-dropdown', 'value'),
      ])
-def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_value, posthoctype, adjustment):
+def calculate_posthoc(genre, selected_countries, selected_range, statistical_1_value, statistical_2_value, posthoctype, adjustment):
 
     global posthoc_result
     global cols
     global posthoc_result_dict
 
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    posthoc_result = sp.posthoc_dunn(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+    posthoc_result = sp.posthoc_dunn(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "dunn":
-        posthoc_result = sp.posthoc_dunn(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_dunn(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "conover":
-        posthoc_result = sp.posthoc_conover(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_conover(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "mann-whitney":
-        posthoc_result = sp.posthoc_mannwhitney(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_mannwhitney(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     posthoc_result = posthoc_result.round(5)
     posthoc_result['Country'] = posthoc_result.index
     cols = posthoc_result.columns.tolist()
@@ -313,16 +324,16 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
     posthoc_result = posthoc_result[cols]
     columns_result = [{"name": i, "id": i} for i in posthoc_result.columns]
     posthoc_result_dict = posthoc_result.to_dict('records')
-    ranked_dataframe = data.get_ranked_dataframe(y_value, x_value)
+    ranked_dataframe = data.get_ranked_dataframe(statistical_2_value, statistical_1_value)
     tooltip_data = [
                 {
                     column_id: {'value': str(next(iter(row.values()))) #left country
                                          + " with mean rank: "
-                                         + str(data.get_mean_rank(ranked_dataframe, x_value, str(next(iter(row.values())))))
+                                         + str(data.get_mean_rank(ranked_dataframe, statistical_1_value, str(next(iter(row.values())))))
                                          + " vs "
                                          + str(column_id) # upper contry
                                          + " with mean rank: "
-                                         + str(data.get_mean_rank(ranked_dataframe, x_value, str(column_id)))
+                                         + str(data.get_mean_rank(ranked_dataframe, statistical_1_value, str(column_id)))
                                          ,
                                 'type': 'markdown'}
                     for column_id, row_id in row.items()
@@ -338,6 +349,49 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
 )
 def set_posthoc_header(posthoctype, adjustment):
     return 'Kruskal Wallis Post-Hoc ' + posthoctype.title() + '-Test using ' + adjustment.title() + ' for adjusting p values'
+
+# @app.callback(
+#     dash.dependencies.Output('statistical-1-value-dropdown', 'value'),
+#     dash.dependencies.Output('statistical-2-value-dropdown', 'value'),
+#     [
+#      dash.dependencies.Input('checkbox-dropdown-binder', 'value'),
+#      dash.dependencies.Input('box-x-value-dropdown', 'value'),
+#      dash.dependencies.Input('box-y-value-dropdown', 'value'),
+#     ])
+# def sync_dropdown_menues(bound_status, boxplot_x_value, boxplot_y_value):
+#     if bound_status == "bound":
+#         statistical_1_value = boxplot_x_value
+#         statistical_2_value = boxplot_y_value
+#         return  statistical_1_value, statistical_2_value
+
+# @app.callback(
+#     dash.dependencies.Output('box-x-value-dropdown', 'value'),
+#     dash.dependencies.Output('box-y-value-dropdown', 'value'),
+#     dash.dependencies.Output('statistical-1-value-dropdown', 'value'),
+#     dash.dependencies.Output('statistical-2-value-dropdown', 'value'),
+#     [
+#      dash.dependencies.Input('checkbox-dropdown-binder', 'value'),
+#      dash.dependencies.Input('box-x-value-dropdown', 'value'),
+#      dash.dependencies.Input('box-x-value-dropdown', 'n_clicks_timestamp'),
+#      dash.dependencies.Input('box-y-value-dropdown', 'value'),
+#      dash.dependencies.Input('box-y-value-dropdown', 'n_clicks_timestamp'),
+#      dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
+#      dash.dependencies.Input('statistical-1-value-dropdown', 'n_clicks_timestamp'),
+#      dash.dependencies.Input('statistical-2-value-dropdown', 'value'),
+#      dash.dependencies.Input('statistical-2-value-dropdown', 'n_clicks_timestamp'),
+#     ])
+# def sync_dropdown_menues(bound_status, boxplot_x_value, boxplot_x_timestamp, boxplot_y_value, boxplot_y_timestamp,
+#                          statistical_1_value, statistical_1_timestamp, statistical_2_value, statistical_2_timestamp):
+#     if bound_status == "bound":
+#         if boxplot_x_timestamp > statistical_1_timestamp:
+#             statistical_1_value = boxplot_x_value
+#         if boxplot_x_timestamp < statistical_1_timestamp:
+#             boxplot_x_value = statistical_1_value
+#         if boxplot_y_timestamp > statistical_2_timestamp:
+#             statistical_2_value = boxplot_y_value
+#         if boxplot_y_timestamp < statistical_2_timestamp:
+#             boxplot_y_value = statistical_2_value
+#     return  boxplot_x_value, boxplot_y_value, statistical_1_value, statistical_2_value
 
 
 # Run the application.
