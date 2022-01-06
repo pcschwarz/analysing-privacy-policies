@@ -31,14 +31,14 @@ df = data.get_data(selected_genres=available_genres,
 #
 
 ## intial result for the statistical posthoc tests, this gets updated via callbacks afterwards
-precalculated_posthoc_result = sp.posthoc_dunn(df, val_col='vagueTotalPercentage', group_col='hostingLocation',
+posthoc_result = sp.posthoc_dunn(df, val_col='vagueTotalPercentage', group_col='hostingLocation',
                                                p_adjust='bonferroni')
-precalculated_posthoc_result = precalculated_posthoc_result.round(5)
-precalculated_posthoc_result['Country'] = precalculated_posthoc_result.index
-precalculated_cols = precalculated_posthoc_result.columns.tolist()
-precalculated_cols = precalculated_cols[-1:] + precalculated_cols[:-1]
-precalculated_posthoc_result = precalculated_posthoc_result[precalculated_cols]
-precalculated_posthoc_result_dict = precalculated_posthoc_result.to_dict('records')
+posthoc_result = posthoc_result.round(5)
+posthoc_result['Country'] = posthoc_result.index
+cols = posthoc_result.columns.tolist()
+cols = cols[-1:] + cols[:-1]
+posthoc_result = posthoc_result[cols]
+posthoc_result_dict = posthoc_result.to_dict('records')
 ##
 
 app.layout = html.Div([
@@ -129,6 +129,8 @@ app.layout = html.Div([
                                   "vagueTotalPercentage": "percentage occurrence of vague terms"},
                           ),
         ), style={'width': '100%', 'display': 'inline-block'}),
+
+
     ], className="five columns"),
 
     # right column
@@ -186,12 +188,16 @@ app.layout = html.Div([
 
         html.Div(id='shapiro-output'),
         html.Div(id='kruskal-wallis-output'),
+
         html.H5(id='post-hoc-header',
                 children='Kruskal Wallis Post-Hoc Dunn Test using bonferroni for adjusting p values'),
+
         html.Div(dash_table.DataTable(
             id='posthoc-output',
-            columns=[{"name": i, "id": i} for i in precalculated_posthoc_result.columns],
-            data=precalculated_posthoc_result_dict,
+            columns=[{"name": i, "id": i} for i in posthoc_result.columns],
+            data=posthoc_result_dict,
+            tooltip_delay=0,
+            tooltip_duration=None,
             style_data_conditional=(
                     [
                         {
@@ -202,7 +208,7 @@ app.layout = html.Div([
                             'backgroundColor': '#67a9f0',  # 0074D9 für dunkleres blau
                             'color': 'white'
 
-                        } for col in precalculated_posthoc_result.columns
+                        } for col in posthoc_result.columns
                     ] +
                     [
                         {
@@ -213,7 +219,7 @@ app.layout = html.Div([
                             'backgroundColor': '#0074D9',  # 0074D9 für dunkleres blau
                             'color': 'white'
 
-                        } for col in precalculated_posthoc_result.columns
+                        } for col in posthoc_result.columns
                     ] +
                     [
                         {
@@ -224,12 +230,16 @@ app.layout = html.Div([
                             'backgroundColor': '#004187',  # 0074D9 für dunkleres blau
                             'color': 'white'
 
-                        } for col in precalculated_posthoc_result.columns
+                        } for col in posthoc_result.columns
                     ]
 
             )
 
+
         ), style={'width': '100%', 'display': 'inline-block'}),
+
+
+
     ], className="six columns"),
 
 ])
@@ -242,9 +252,9 @@ app.layout = html.Div([
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('box-x-value-dropdown', 'value'),
      dash.dependencies.Input('box-y-value-dropdown', 'value')])
-def update_box_chart(genre, selected_countries, selected_range, x_value, y_value):
-    return px.box(data.get_data(genre, selected_countries, selected_range), x=x_value, y=y_value,
-                  points="outliers", notched=False, color=x_value,
+def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value):
+    return px.box(data.get_data(genre, selected_countries, selected_range), x=boxplot_x_value, y=boxplot_y_value,
+                  points="outliers", notched=False, color=boxplot_x_value,
                   )
 
 
@@ -254,9 +264,9 @@ def update_box_chart(genre, selected_countries, selected_range, x_value, y_value
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('statistical-1-value-dropdown', 'value')])
-def calculate_shapiro(genre, selected_countries, selected_range, x_value):
+def calculate_shapiro(genre, selected_countries, selected_range, statistical_1_value):
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    return str(ss.shapiro(helper_df[x_value]))
+    return str(ss.shapiro(helper_df[statistical_1_value]))
 
 
 @app.callback(
@@ -266,15 +276,16 @@ def calculate_shapiro(genre, selected_countries, selected_range, x_value):
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
      dash.dependencies.Input('statistical-2-value-dropdown', 'value')])
-def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_value):
+def calculate_kruskal(genre, selected_countries, selected_range, statistical_1_value, statistical_2_value):
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    kruskal_data = [helper_df.loc[ids, x_value].values for ids in helper_df.groupby(y_value).groups.values()]
+    kruskal_data = [helper_df.loc[ids, statistical_1_value].values for ids in helper_df.groupby(statistical_2_value).groups.values()]
     return str(ss.kruskal(*kruskal_data))
 
 
 @app.callback(
     dash.dependencies.Output('posthoc-output', 'data'),
     dash.dependencies.Output('posthoc-output', 'columns'),
+    dash.dependencies.Output('posthoc-output', 'tooltip_data'),
     [dash.dependencies.Input('genre-checklist-group', 'value'),
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
@@ -283,22 +294,45 @@ def calculate_kruskal(genre, selected_countries, selected_range, x_value, y_valu
      dash.dependencies.Input('posthoc-type-dropdown', 'value'),
      dash.dependencies.Input('statistical-adjustment-dropdown', 'value'),
      ])
-def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_value, posthoctype, adjustment):
+def calculate_posthoc(genre, selected_countries, selected_range, statistical_1_value, statistical_2_value, posthoctype, adjustment):
+
+    global posthoc_result
+    global cols
+    global posthoc_result_dict
+
     helper_df = data.get_data(genre, selected_countries, selected_range)
-    posthoc_result = sp.posthoc_dunn(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+    posthoc_result = sp.posthoc_dunn(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "dunn":
-        posthoc_result = sp.posthoc_dunn(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_dunn(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "conover":
-        posthoc_result = sp.posthoc_conover(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_conover(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     if posthoctype == "mann-whitney":
-        posthoc_result = sp.posthoc_mannwhitney(helper_df, val_col=x_value, group_col=y_value, p_adjust=adjustment)
+        posthoc_result = sp.posthoc_mannwhitney(helper_df, val_col=statistical_1_value, group_col=statistical_2_value, p_adjust=adjustment)
     posthoc_result = posthoc_result.round(5)
     posthoc_result['Country'] = posthoc_result.index
     cols = posthoc_result.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     posthoc_result = posthoc_result[cols]
-    columns = [{"name": i, "id": i} for i in posthoc_result.columns]
-    return posthoc_result.to_dict('records'), columns
+    columns_result = [{"name": i, "id": i} for i in posthoc_result.columns]
+    posthoc_result_dict = posthoc_result.to_dict('records')
+    ranked_dataframe = data.get_ranked_dataframe(statistical_2_value, statistical_1_value)
+    tooltip_data = [
+                {
+                    column_id: {'value': str(next(iter(row.values()))) #left country
+                                         + " with mean rank: "
+                                         + str(data.get_mean_rank(ranked_dataframe, statistical_1_value, str(next(iter(row.values())))))
+                                         + " vs "
+                                         + str(column_id) # upper contry
+                                         + " with mean rank: "
+                                         + str(data.get_mean_rank(ranked_dataframe, statistical_1_value, str(column_id)))
+                                         + ". Total N = "
+                                         + str(helper_df.shape[0])
+                                         ,
+                                'type': 'markdown'}
+                    for column_id, row_id in row.items()
+                } for row in posthoc_result_dict
+            ]
+    return posthoc_result_dict, columns_result, tooltip_data
 
 
 @app.callback(
@@ -308,6 +342,7 @@ def calculate_posthoc(genre, selected_countries, selected_range, x_value, y_valu
 )
 def set_posthoc_header(posthoctype, adjustment):
     return 'Kruskal Wallis Post-Hoc ' + posthoctype.title() + '-Test using ' + adjustment.title() + ' for adjusting p values'
+
 
 
 # Run the application.
