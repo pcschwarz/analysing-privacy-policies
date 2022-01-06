@@ -94,13 +94,6 @@ app.layout = html.Div([
             children='Boxplots',
         ),
 
-        # html.Div(dcc.Checklist(
-        #     id='checkbox-dropdown-binder',
-        #     options=[{'label': 'Bind left and right dropdowns', 'value': 'bound'}],
-        #
-        #     labelStyle={'display': 'inline-block'}
-        # ), style={'width': '100%', 'display': 'inline-block'}),
-
         html.Div(dcc.Dropdown(
             id='box-y-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
@@ -146,8 +139,6 @@ app.layout = html.Div([
         html.H4(
             children='Statistical Tests',
         ),
-
-        #html.Br(), #Break if Binder is included
 
         html.Div(dcc.Dropdown(
             id='statistical-1-value-dropdown',
@@ -334,6 +325,8 @@ def calculate_posthoc(genre, selected_countries, selected_range, statistical_1_v
                                          + str(column_id) # upper contry
                                          + " with mean rank: "
                                          + str(data.get_mean_rank(ranked_dataframe, statistical_1_value, str(column_id)))
+                                         + ". Total N = "
+                                         + str(helper_df.shape[0])
                                          ,
                                 'type': 'markdown'}
                     for column_id, row_id in row.items()
@@ -350,48 +343,6 @@ def calculate_posthoc(genre, selected_countries, selected_range, statistical_1_v
 def set_posthoc_header(posthoctype, adjustment):
     return 'Kruskal Wallis Post-Hoc ' + posthoctype.title() + '-Test using ' + adjustment.title() + ' for adjusting p values'
 
-# @app.callback(
-#     dash.dependencies.Output('statistical-1-value-dropdown', 'value'),
-#     dash.dependencies.Output('statistical-2-value-dropdown', 'value'),
-#     [
-#      dash.dependencies.Input('checkbox-dropdown-binder', 'value'),
-#      dash.dependencies.Input('box-x-value-dropdown', 'value'),
-#      dash.dependencies.Input('box-y-value-dropdown', 'value'),
-#     ])
-# def sync_dropdown_menues(bound_status, boxplot_x_value, boxplot_y_value):
-#     if bound_status == "bound":
-#         statistical_1_value = boxplot_x_value
-#         statistical_2_value = boxplot_y_value
-#         return  statistical_1_value, statistical_2_value
-
-# @app.callback(
-#     dash.dependencies.Output('box-x-value-dropdown', 'value'),
-#     dash.dependencies.Output('box-y-value-dropdown', 'value'),
-#     dash.dependencies.Output('statistical-1-value-dropdown', 'value'),
-#     dash.dependencies.Output('statistical-2-value-dropdown', 'value'),
-#     [
-#      dash.dependencies.Input('checkbox-dropdown-binder', 'value'),
-#      dash.dependencies.Input('box-x-value-dropdown', 'value'),
-#      dash.dependencies.Input('box-x-value-dropdown', 'n_clicks_timestamp'),
-#      dash.dependencies.Input('box-y-value-dropdown', 'value'),
-#      dash.dependencies.Input('box-y-value-dropdown', 'n_clicks_timestamp'),
-#      dash.dependencies.Input('statistical-1-value-dropdown', 'value'),
-#      dash.dependencies.Input('statistical-1-value-dropdown', 'n_clicks_timestamp'),
-#      dash.dependencies.Input('statistical-2-value-dropdown', 'value'),
-#      dash.dependencies.Input('statistical-2-value-dropdown', 'n_clicks_timestamp'),
-#     ])
-# def sync_dropdown_menues(bound_status, boxplot_x_value, boxplot_x_timestamp, boxplot_y_value, boxplot_y_timestamp,
-#                          statistical_1_value, statistical_1_timestamp, statistical_2_value, statistical_2_timestamp):
-#     if bound_status == "bound":
-#         if boxplot_x_timestamp > statistical_1_timestamp:
-#             statistical_1_value = boxplot_x_value
-#         if boxplot_x_timestamp < statistical_1_timestamp:
-#             boxplot_x_value = statistical_1_value
-#         if boxplot_y_timestamp > statistical_2_timestamp:
-#             statistical_2_value = boxplot_y_value
-#         if boxplot_y_timestamp < statistical_2_timestamp:
-#             boxplot_y_value = statistical_2_value
-#     return  boxplot_x_value, boxplot_y_value, statistical_1_value, statistical_2_value
 
 
 # Run the application.
