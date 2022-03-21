@@ -46,6 +46,10 @@ def update_box_fig(box_fig):
     box_fig['layout']['font'] = dict(size=14.5)
     return box_fig
 
+##little hacky way to get the label for a dropdown value...
+def get_label(value_chosen, opt):
+    the_label = [x['label'] for x in opt if x['value'] == value_chosen]
+    return the_label[0]
 
 app.layout = html.Div([
 
@@ -258,15 +262,15 @@ app.layout = html.Div([
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('box-x-value-dropdown', 'value'),
      dash.dependencies.Input('box-y-value-dropdown', 'value'),
-     dash.dependencies.Input('box-x-label-dropdown', 'label'),
-     dash.dependencies.Input('box-y-label-dropdown', 'label')
+     dash.dependencies.Input('box-x-value-dropdown', 'options'),
+     dash.dependencies.Input('box-y-value-dropdown', 'options')
      ])
-def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value, boxplot_x_label, boxplot_y_label):
+def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value, boxplot_x_options, boxplot_y_options):
     return update_box_fig(px.box(data.get_data(genre, selected_countries, selected_range),
                   x=boxplot_x_value, y=boxplot_y_value,
                   points="outliers", notched=False, color=boxplot_x_value,
-                  labels={boxplot_x_value: boxplot_x_label,
-                          boxplot_y_value: boxplot_y_label},
+                  labels={str(boxplot_x_value): str(get_label(boxplot_x_value, boxplot_x_options)),
+                          str(boxplot_y_value): str(get_label(boxplot_y_value, boxplot_y_options))},
                   ))
 
 
