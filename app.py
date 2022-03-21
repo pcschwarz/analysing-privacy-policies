@@ -41,6 +41,16 @@ posthoc_result = posthoc_result[cols]
 posthoc_result_dict = posthoc_result.to_dict('records')
 ##
 
+def update_box_fig(box_fig):
+    box_fig.update_layout(showlegend=False)
+    box_fig['layout']['font'] = dict(size=14.5)
+    return box_fig
+
+##little hacky way to get the label for a dropdown value...
+def get_label(value_chosen, opt):
+    the_label = [x['label'] for x in opt if x['value'] == value_chosen]
+    return the_label[0]
+
 app.layout = html.Div([
 
     # Nothing to see here, just for keeping a margin.
@@ -97,15 +107,15 @@ app.layout = html.Div([
         html.Div(dcc.Dropdown(
             id='box-y-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
-                'Percentage occurrence of Vague Terms': 'vagueTotalPercentage',
-                'averageMinutesToReadNative': 'averageMinutesToReadNative',
-                'SMOGIndex': 'SMOGIndex',
-                'FleschKincaidGrade': 'FleschKincaidGrade',
-                'ColemanLiau': 'ColemanLiau',
-                'AutomatedReadabilityIndex': 'AutomatedReadabilityIndex',
-                'GunningFog': 'GunningFog',
-                'DaleChall': 'DaleChall',
-                'meanReadability': 'meanReadability',
+                'Percentage Occurrence of Vague Lexical Items': 'vagueTotalPercentage',
+                'Mean Reading Time in Minutes (Native)': 'averageMinutesToReadNative',
+                'SMOG Index': 'SMOGIndex',
+                'Flesch-Kincaid Grade Level': 'FleschKincaidGrade',
+                'Coleman-Liau Index': 'ColemanLiau',
+                'Automated Readability Index': 'AutomatedReadabilityIndex',
+                'Gunning Fog Index': 'GunningFog',
+                'Dale-Chall Index': 'DaleChall',
+                'Mean Readability Grade': 'meanReadability',
             }.items()],
             value='vagueTotalPercentage',
         ), style={'width': '50%', 'display': 'inline-block'}),
@@ -113,21 +123,21 @@ app.layout = html.Div([
         html.Div(dcc.Dropdown(
             id='box-x-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
-                'hostingLocation': 'hostingLocation',
-                'amountOfInstallsGrouped': 'amountOfInstallsGrouped',
-                'MVLocationGenre': 'MVLocationGenre',
-                'isNativelyEnglish': 'isNativelyEnglish',
+                'Hosting Location': 'hostingLocation',
+                'Amount Of Installs': 'amountOfInstallsGrouped',
+                'Location and Genre Pairs': 'MVLocationGenre',
+                'Native vs Non-native English': 'isNativelyEnglish',
             }.items()],
             value='hostingLocation',
         ), style={'width': '50%', 'display': 'inline-block'}),
 
         html.Div(dcc.Graph(
             id='box-plot',
-            figure=px.box(df, x="amountOfInstallsGrouped", y="vagueTotalPercentage",
+            figure=update_box_fig(px.box(df, x="amountOfInstallsGrouped", y="vagueTotalPercentage",
                           points="outliers", notched=False, color="amountOfInstallsGrouped",
-                          labels={"hostingLocation": "hosting location",
-                                  "vagueTotalPercentage": "percentage occurrence of vague terms"},
-                          ),
+                          labels={"hostingLocation": "Hosting Location",
+                                  "vagueTotalPercentage": "Percentage Occurrence of Vague Lexical Items"},
+                          )),
         ), style={'width': '100%', 'display': 'inline-block'}),
 
 
@@ -143,15 +153,15 @@ app.layout = html.Div([
         html.Div(dcc.Dropdown(
             id='statistical-1-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
-                'Percentage occurrence of Vague Terms': 'vagueTotalPercentage',
-                'averageMinutesToReadNative': 'averageMinutesToReadNative',
-                'SMOGIndex': 'SMOGIndex',
-                'FleschKincaidGrade': 'FleschKincaidGrade',
-                'ColemanLiau': 'ColemanLiau',
-                'AutomatedReadabilityIndex': 'AutomatedReadabilityIndex',
-                'GunningFog': 'GunningFog',
-                'DaleChall': 'DaleChall',
-                'meanReadability': 'meanReadability',
+                'Percentage Occurrence of Vague Lexical Items': 'vagueTotalPercentage',
+                'Mean Reading Time in Minutes (Native)': 'averageMinutesToReadNative',
+                'SMOG Index': 'SMOGIndex',
+                'Flesch-Kincaid Grade Level': 'FleschKincaidGrade',
+                'Coleman-Liau Index': 'ColemanLiau',
+                'Automated Readability Index': 'AutomatedReadabilityIndex',
+                'Gunning Fog Index': 'GunningFog',
+                'Dale-Chall Index': 'DaleChall',
+                'Mean Readability Grade': 'meanReadability',
             }.items()],
             value='vagueTotalPercentage',
         ), style={'width': '40%', 'display': 'inline-block'}),
@@ -159,8 +169,8 @@ app.layout = html.Div([
         html.Div(dcc.Dropdown(
             id='statistical-2-value-dropdown',
             options=[{'label': label, 'value': value} for label, value in {
-                'hostingLocation': 'hostingLocation',
-                'amountOfInstallsGrouped': 'amountOfInstallsGrouped',
+                'Hosting Location': 'hostingLocation',
+                'Amount Of Installs': 'amountOfInstallsGrouped',
             }.items()],
             value='hostingLocation',
         ), style={'width': '25%', 'display': 'inline-block'}),
@@ -181,7 +191,7 @@ app.layout = html.Div([
                 'Bonferroni': 'bonferroni',
                 'Sidak': 'sidak',
                 'Holm': 'holm',
-                'Holm-sidak': 'holm-sidak',
+                'Holm-Sidak': 'holm-sidak',
             }.items()],
             value='bonferroni',
         ), style={'width': '15%', 'display': 'inline-block'}),
@@ -190,7 +200,7 @@ app.layout = html.Div([
         html.Div(id='kruskal-wallis-output'),
 
         html.H5(id='post-hoc-header',
-                children='Kruskal Wallis Post-Hoc Dunn Test using bonferroni for adjusting p values'),
+                children='Kruskal Wallis Post-Hoc Dunn Test using Bonferroni for adjusting p values'),
 
         html.Div(dash_table.DataTable(
             id='posthoc-output',
@@ -251,11 +261,17 @@ app.layout = html.Div([
      dash.dependencies.Input('selected_countries', 'value'),
      dash.dependencies.Input('selected_range', 'value'),
      dash.dependencies.Input('box-x-value-dropdown', 'value'),
-     dash.dependencies.Input('box-y-value-dropdown', 'value')])
-def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value):
-    return px.box(data.get_data(genre, selected_countries, selected_range), x=boxplot_x_value, y=boxplot_y_value,
+     dash.dependencies.Input('box-y-value-dropdown', 'value'),
+     dash.dependencies.Input('box-x-value-dropdown', 'options'),
+     dash.dependencies.Input('box-y-value-dropdown', 'options')
+     ])
+def update_box_chart(genre, selected_countries, selected_range, boxplot_x_value, boxplot_y_value, boxplot_x_options, boxplot_y_options):
+    return update_box_fig(px.box(data.get_data(genre, selected_countries, selected_range),
+                  x=boxplot_x_value, y=boxplot_y_value,
                   points="outliers", notched=False, color=boxplot_x_value,
-                  )
+                  labels={str(boxplot_x_value): str(get_label(boxplot_x_value, boxplot_x_options)),
+                          str(boxplot_y_value): str(get_label(boxplot_y_value, boxplot_y_options))},
+                  ))
 
 
 @app.callback(
