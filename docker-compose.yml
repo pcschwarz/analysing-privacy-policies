@@ -1,10 +1,25 @@
 version: '3'
 
 services:
+
   dashboard-service:
     build: ./
     volumes:
       - ./data:/usr/src/data
     ports:
       - 8051:8050
+    networks:
+      -  dashboard
 
+  google-play-api:
+    image: kidscare8playground/google-play-api:0.0.3
+    ports:
+      - 8151:8080
+    networks:
+      -  dashboard
+
+
+
+networks:
+  dashboard:
+    driver: bridge
